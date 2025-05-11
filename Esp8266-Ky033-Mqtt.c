@@ -8,7 +8,7 @@
 #include "esp_wifi.h"
 #include "esp_event.h"
 #include "nvs_flash.h"
-#include "esp_netif.h"
+#include "tcpip_adapter.h" //per ESP-IDF legacy
 
 
 
@@ -32,10 +32,10 @@ void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event
 
 // === Wi-Fi Setup ===
 void wifi_init_sta(void) {
-    esp_netif_init();  // Inizializza lo stack TCP/IP
-    esp_event_loop_create_default();  // Crea il loop eventi di sistema
-    esp_netif_create_default_wifi_sta();  // Crea interfaccia di default WiFi STA (station mode)
-
+    tcpip_adapter_init();  // Inizializza lo stack TCP/IP
+    esp_event_loop_init(NULL, NULL);  // Crea un loop eventi base (senza handler custom)
+  
+    
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     esp_wifi_init(&cfg);
 
