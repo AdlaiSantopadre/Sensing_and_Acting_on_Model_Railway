@@ -63,6 +63,14 @@ void wifi_init_sta(void) {
 
     esp_wifi_set_mode(WIFI_MODE_STA);
     esp_wifi_set_config(WIFI_IF_STA, &wifi_config);
+    // === IP statico ===
+    tcpip_adapter_dhcpc_stop(TCPIP_ADAPTER_IF_STA);
+    tcpip_adapter_ip_info_t ip_info;
+    IP4_ADDR(&ip_info.ip, 192, 168, 1, 250);
+    IP4_ADDR(&ip_info.gw, 192, 168, 1, 1);
+    IP4_ADDR(&ip_info.netmask, 255, 255, 255, 0);
+    tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_STA, &ip_info);
+
     esp_wifi_start();
 
     ESP_LOGI(TAG, "Connessione Wi-Fi a SSID: %s", WIFI_SSID);
