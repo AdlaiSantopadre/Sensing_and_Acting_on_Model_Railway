@@ -49,8 +49,17 @@ void wifi_init_sta(void) {
     esp_wifi_set_mode(WIFI_MODE_STA);  // Imposta il dispositivo come client WiFi
     esp_wifi_set_config(WIFI_IF_STA, &wifi_config);  // Applica configurazione
     esp_wifi_start();  // Avvia WiFi
-
-    ESP_LOGI(TAG, "Connessione Wi-Fi a SSID: %s", WIFI_SSID);
+ vTaskDelay(pdMS_TO_TICKS(3000));
+    tcpip_adapter_ip_info_t ip;
+    if (tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &ip) == ESP_OK) {
+        ESP_LOGI(TAG, "Indirizzo IP assegnato: " IPSTR, IP2STR(&ip.ip));
+    } else {
+        ESP_LOGE(TAG, "Nessun IP assegnato al NodeMCU!");
+    }
+    uint8_t mac[6];
+    esp_wifi_get_mac(WIFI_IF_STA, mac);
+    ESP_LOGI(TAG, "MAC ESP8266: %02x:%02x:%02x:%02x:%02x:%02x",
+             mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 }
 
 //==Inizializzazione del client MQTT
@@ -66,10 +75,18 @@ void mqtt_app_start(void) {
 //==Task FreeRTOS: lettura sensore 
 void task_sensore(void *param) { //Riceve un puntatore a intero (indirizzo di stato_sensore).
     int *p_stato = (int *)param; //*p_stato consente di accedere/modificare il valore globale condiviso
-    gpio_set_direction(KY033_GPIO_PIN, GPIO_MODE_INPUT);//Imposta il pin collegato al sensore come input digitale
+    gpio_config_t io_conf = {
+        .pin_bit_mask = (1ULL << KY033_GPIO_PIN),
+        .mode = GPIO_MODE_INPUT,
+        .pull_up_en = GPIO_PULLUP_ENABLE,
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,
+        .intr_type = GPIO_INTR_DISABLE
+    };
+    gpio_config(&io_conf);
 
     while (1) {
         int lettura = gpio_get_level(KY033_GPIO_PIN); //Legge periodicamente lo stato del sensore.
+        ESP_LOGI(TAG, "Lettura KY033: %d", lettura);
         if (lettura != *p_stato) { //Se è cambiato rispetto a *p_stato, lo aggiorna e stampa un log.
             *p_stato = lettura;
             ESP_LOGI(TAG, "Stato sensore cambiato: %d", *p_stato);
