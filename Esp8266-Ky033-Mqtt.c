@@ -17,8 +17,8 @@
 #define MQTT_BROKER_URI "mqtt://192.168.1.103" //Indirizzo IP del broker MQTT (su raspberrypi01).
 #define SENSOR_ID "Nodo01" //Etichetta univoca del nodo sensore
 #define FORCE_SEND_INTERVAL_MS 5000 //Intervallo in millisecondi per l’invio sincrono periodico (ogni 5 secondi).
-#define WIFI_SSID "TUA_SSID"
-#define WIFI_PASS "TUA_PASSWORD"
+#define WIFI_SSID "MERCURSYS_CBCE"
+#define WIFI_PASS "98167494"
 
 //Variabili globali
 static const char *TAG = "MQTT_SENSOR"; //Etichetta usata nei messaggi di log seriale
