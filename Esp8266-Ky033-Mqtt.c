@@ -5,12 +5,20 @@
 #include "mqtt_client.h"       //Includi le API del client MQTT dell’ESP-IDF.
 #include "driver/gpio.h"        //Permette di usare i GPIO (input/output digitali)
 #include "time.h"               //Serve per ottenere il timestamp UNIX (time_t) 
+#include "esp_wifi.h"
+#include "esp_event.h"
+#include "nvs_flash.h"
+#include "esp_netif.h"
+
+
 
 //Definizioni macro e configurazioni
 #define KY033_GPIO_PIN GPIO_NUM_14 //Il pin GPIO14 (sul NodeMCU è D5) è collegato al segnale del sensore.
 #define MQTT_BROKER_URI "mqtt://192.168.1.103" //Indirizzo IP del broker MQTT (su raspberrypi01).
 #define SENSOR_ID "Nodo01" //Etichetta univoca del nodo sensore
 #define FORCE_SEND_INTERVAL_MS 5000 //Intervallo in millisecondi per l’invio sincrono periodico (ogni 5 secondi).
+#define WIFI_SSID "TUA_SSID"
+#define WIFI_PASS "TUA_PASSWORD"
 
 //Variabili globali
 static const char *TAG = "MQTT_SENSOR"; //Etichetta usata nei messaggi di log seriale
@@ -22,7 +30,30 @@ void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event
     ESP_LOGI(TAG, "MQTT Event ID: %d", event_id);
 }
 
-//Inizializzazione del client MQTT
+// === Wi-Fi Setup ===
+void wifi_init_sta(void) {
+    esp_netif_init();  // Inizializza lo stack TCP/IP
+    esp_event_loop_create_default();  // Crea il loop eventi di sistema
+    esp_netif_create_default_wifi_sta();  // Crea interfaccia di default WiFi STA (station mode)
+
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    esp_wifi_init(&cfg);
+
+    wifi_config_t wifi_config = {
+        .sta = {
+            .ssid = WIFI_SSID,
+            .password = WIFI_PASS,
+        },
+    };
+
+    esp_wifi_set_mode(WIFI_MODE_STA);  // Imposta il dispositivo come client WiFi
+    esp_wifi_set_config(WIFI_IF_STA, &wifi_config);  // Applica configurazione
+    esp_wifi_start();  // Avvia WiFi
+
+    ESP_LOGI(TAG, "Connessione Wi-Fi a SSID: %s", WIFI_SSID);
+}
+
+//==Inizializzazione del client MQTT
 void mqtt_app_start(void) {
     esp_mqtt_client_config_t mqtt_cfg = {
         .uri = MQTT_BROKER_URI,
@@ -32,7 +63,7 @@ void mqtt_app_start(void) {
     esp_mqtt_client_start(client); //Avvia la connessione
 }
 
-//Task FreeRTOS: lettura sensore 
+//==Task FreeRTOS: lettura sensore 
 void task_sensore(void *param) { //Riceve un puntatore a intero (indirizzo di stato_sensore).
     int *p_stato = (int *)param; //*p_stato consente di accedere/modificare il valore globale condiviso
     gpio_set_direction(KY033_GPIO_PIN, GPIO_MODE_INPUT);//Imposta il pin collegato al sensore come input digitale
@@ -46,7 +77,7 @@ void task_sensore(void *param) { //Riceve un puntatore a intero (indirizzo di st
         vTaskDelay(pdMS_TO_TICKS(500));//Ciclo ogni 500ms.
     }
 }
-//Task_mqtt
+//==Task_mqtt
 void task_mqtt(void *param) {
     int *p_stato = (int *)param;//Anche questo task riceve il puntatore alla stessa variabile stato_sensore
     char msg[128]; //buffer per il messaggio JSON e per il topic dedicato al sensore #01.
@@ -79,6 +110,8 @@ void task_mqtt(void *param) {
 }
 // Avvio della app e creazione dei due task con stack di 4 KB e priorità 5
 void app_main(void) {
+    nvs_flash_init();  // Necessario per la gestione Wi-Fi (salva le configurazioni)
+    wifi_init_sta();   // Connessione Wi-Fi prima del client MQTT
     ESP_LOGI(TAG, "Avvio Applicazione Nodo %s", SENSOR_ID);
     mqtt_app_start();
     xTaskCreate(task_sensore, "task_sensore", 4096, &stato_sensore, 5, NULL);
