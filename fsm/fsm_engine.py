@@ -10,16 +10,27 @@ class FSMEngine:
         self.deviato = False
         setup_transitions()
 
-    def handle_event(self, event: str):
-        print(f"\n[Evento] Ricevuto: '{event}'")
-        if event in self.current_state.transitions:
+def handle_event(self, event_obj):
+    """
+    Gestisce un evento logico per la FSM.
+    Accetta sia una stringa 'attraversamento_1' sia un dizionario con 'event' e 'timestamp'.
+    """
+    if isinstance(event_obj, dict):
+        event = event_obj.get("event")
+        ts = event_obj.get("timestamp", "N/D")
+    else:
+        event = event_obj
+        ts = "N/D"
+    print(f"[FSM] Evento ricevuto: {event} (timestamp: {ts})")
+        
+    if event in self.current_state.transitions:
             next_state = self.current_state.transitions[event]
             actions = self.current_state.actions.get(event, [])
             print(f"[Transizione] {self.current_state.name} --({event})--> {next_state.name}")
             self._execute_actions(actions)
             self.current_state = next_state
             print(f"[Stato Attuale] {self.current_state.name} ({self.current_state.code})")
-        else:
+    else:
             print(f"[FSM] Nessuna transizione definita per evento '{event}' nello stato {self.current_state.name}")
             print(f"Stato attuale: ({self.current_state.name}, {self.current_state.code})")
             print(f"Warning attivo: {self.warning} | Deviato attivo: {self.deviato}")
