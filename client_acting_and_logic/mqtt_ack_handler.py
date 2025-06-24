@@ -2,7 +2,7 @@
 import paho.mqtt.client as mqtt
 import json
 import logging
-from config import BROKER, PORT, USERNAME, PASSWORD, CLIENTS, TOPIC_ACK_IN, TOPIC_ACK_OUT, EVENT_MAP
+from config import BROKER, PORT, USERNAME, PASSWORD, CLIENT_IDS, TOPIC_ACK_IN, TOPIC_ACK_OUT, EVENT_MAP
 from event_stack import enqueue_event # verrà usato per FSM
 
 # Configura logging
@@ -10,7 +10,7 @@ logging.basicConfig(level=logging.INFO, format='[ACK_HANDLER] %(message)s')
 log = logging.getLogger("ACK_HANDLER")
 
 # Stato per ogni client_id
-sensor_state = {client_id: {"last": 1, "waiting_ack": False, "buffered": False} for client_id in CLIENTS}
+sensor_state = {client_id: {"last": 1, "waiting_ack": False, "buffered": False} for client_id in CLIENT_IDS}
 
 def on_connect(client, userdata, flags, rc):
     log.info(f"Connesso al broker ({rc})")
@@ -28,7 +28,7 @@ def on_message(client, userdata, msg):
         client_id = data.get("id")
         stato = data.get("stato")
 
-        if client_id not in CLIENTS:
+        if client_id not in CLIENT_IDS:
             log.warning(f"ID non riconosciuto: {client_id}")
             return
         stato_prec = sensor_state[client_id]["last"]

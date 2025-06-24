@@ -1,5 +1,5 @@
 from mqtt_ack_handler import start_ack_handler
-from mqtt_servomotore_new import start_acting_client
+from client_acting_and_logic.mqtt_servomotore_new import start_acting_client
 import threading
 
 if __name__ == "__main__":

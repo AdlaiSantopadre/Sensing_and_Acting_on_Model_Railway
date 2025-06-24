@@ -11,17 +11,17 @@ CLIENT_ID = "deviatoio01"
 MQTT_TOPIC_CMD = "deviatoio/01"
 MQTT_TOPIC_ACK = "ack/deviatoio/01"
 
-ANGLE_DEVIAZIONE = 105
-ANGLE_RIPRISTINO = 75
+ANGLE_DEVIAZIONE = 98
+ANGLE_RIPRISTINO =70
 SERVO_CHANNEL = 0
 
 # Inizializzazione servomotore
 try:
     kit = ServoKit(channels=16)
     kit.servo[SERVO_CHANNEL].angle = ANGLE_RIPRISTINO
-    logInfo(CLIENT_ID, f"Servo inizializzato su canale {SERVO_CHANNEL} con angolo {ANGLE_RIPRISTINO}")
+    #logInfo(CLIENT_ID, f"Servo inizializzato su canale {SERVO_CHANNEL} con angolo {ANGLE_RIPRISTINO}")
 except Exception as e:
-    logError(CLIENT_ID, f"Errore inizializzazione servomotore: {e}")
+    #logError(CLIENT_ID, f"Errore inizializzazione servomotore: {e}")
     kit = None
 
 # Callback alla ricezione di un messaggio MQTT
