@@ -1,0 +1,17 @@
+[Unit]
+Description=IoT Client per acting e ack MQTT
+[Unit]
+Description=IoT Client Acting e ACK
+After=network.target mosquitto.service
+Requires=mosquitto.service
+
+[Service]
+ExecStart=/home/raspberrypi/env/bin/python3 /home/raspberrypi/progetti/IOT/main.py
+WorkingDirectory=/home/raspberrypi/progetti/IOT/
+StandardOutput=journal
+StandardError=journal
+Restart=always
+User=raspberrypi
+Environment="PYTHONUNBUFFERED=1"
+[Install]
+WantedBy=multi-user.target
