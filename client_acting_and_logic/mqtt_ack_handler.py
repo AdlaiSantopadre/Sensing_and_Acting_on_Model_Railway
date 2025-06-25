@@ -3,7 +3,7 @@ import paho.mqtt.client as mqtt
 import json
 import logging
 from config import BROKER, PORT, USERNAME, PASSWORD, CLIENT_IDS, TOPIC_ACK_IN, TOPIC_ACK_OUT, EVENT_MAP
-from event_stack import enqueue_event # verrà usato per FSM
+from client_acting_and_logic.event_stack import enqueue_event # verrÃ  usato per FSM
 
 # Configura logging
 logging.basicConfig(level=logging.INFO, format='[ACK_HANDLER] %(message)s')
@@ -34,7 +34,7 @@ def on_message(client, userdata, msg):
         stato_prec = sensor_state[client_id]["last"]
 
         if stato == 0 and stato_prec == 1:
-            # Fronte 1→0 (binario occupato): invio ack e genero evento logico
+            # Fronte 1â0 (binario occupato): invio ack e genero evento logico
             sensor_state[client_id]["waiting_ack"] = True
             sensor_state[client_id]["last"] = 0
 
@@ -47,7 +47,7 @@ def on_message(client, userdata, msg):
             log.info(f"Innescato evento logico: {event}")
         
         elif stato == 1 and stato_prec == 0:
-            # Fronte 0→1, reset solo stato interno, nessun evento logico
+            # Fronte 0â1, reset solo stato interno, nessun evento logico
             sensor_state[client_id]["waiting_ack"] = False
             sensor_state[client_id]["last"] = 1
 
@@ -73,4 +73,3 @@ def start_ack_handler():
         client.loop_forever()
     except Exception as e:
         log.critical(f"Errore fatale: {e}")
-

@@ -1,7 +1,7 @@
 # Definizione delle transizioni tra stati come da grafo fsm_stati_con_deviazione_lr.png
 from fsm.state import State
 from fsm.states import states
-import pandas as pd
+#import pandas as pd
 # # Convenzione: evento = nome attraversamento es. "attraversamento_1"
 
 transitions_data = [
@@ -95,14 +95,15 @@ def setup_transitions():
 
 
 # Generazione tabella con azioni
-def mostra_transizioni():
-    data = []
-    for state in states.values():
-        for event, next_state in state.transitions.items():
-            azioni = "; ".join(state.actions.get(event, []))
-            data.append((state.name, event, next_state.name, azioni))
+# def mostra_transizioni():
+    # data = []
+    # for state in states.values():
+        # for event, next_state in state.transitions.items():
+            # azioni = "; ".join(state.actions.get(event, []))
+            # data.append((state.name, event, next_state.name, azioni))
 
-    df = pd.DataFrame(data, columns=["Stato Attuale", "Evento", "Stato Successivo", "Azioni MQTT / Log"])
+    # df = pd.DataFrame(data, columns=["Stato Attuale", "Evento", "Stato Successivo", "Azioni MQTT / Log"])
 
-    return df
+    # return df
+#
 

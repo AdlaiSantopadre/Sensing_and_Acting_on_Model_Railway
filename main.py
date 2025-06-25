@@ -1,16 +1,25 @@
 import threading
+import time
+import paho.mqtt.client as mqtt
+import config
+
 from client_acting_and_logic.mqtt_ack_handler import start_ack_handler
-from client_acting_and_logic.mqtt_servomotore import start_acting_client
-from fsm.fsm_engine_mqtt import FSMEngine
+from client_acting_and_logic.mqtt_servomotore import start_acting_servomotori
+from client_acting_and_logic.event_stack import pop_event
+
+from fsm.fsm_engine import FSMEngine
 from fsm.states import states
 from fsm.transitions import setup_transitions
-# Ensure event_stack.py exists in the same directory or update the import path accordingly
-from client_acting_and_logic.event_stack import pop_event
-import time
 
-# Inizializza FSM
+# Inizializza FSM e client MQTT 
+fsm_mqtt_client = mqtt.Client(client_id=config.CLIENT_ID)
+fsm_mqtt_client.username_pw_set(username="supervisore_fsm", password="esp2025")
+fsm_mqtt_client.connect(config.BROKER, config.PORT)
+fsm_mqtt_client.loop_start()
+
 setup_transitions()
-fsm = FSMEngine(initial_state=states["S_4_4"], mqtt_client=None)
+
+fsm = FSMEngine(start_state=states["S_4_4"], mqtt_client=fsm_mqtt_client)
 
 def fsm_event_loop():
     print("[FSM_LOOP] Avvio ciclo di polling eventi")
@@ -26,11 +35,11 @@ def fsm_event_loop():
             except Exception as e:
                 print("[FSM_LOOP] Errore nella gestione evento:", e)
         time.sleep(0.1)
-
+# === Avvio moduli concorrenti ===
 if __name__ == "__main__":
     print("[MAIN] Avvio sistema IoT client con FSM")
 
-    t1 = threading.Thread(target=start_acting_client)
+    t1 = threading.Thread(target=start_acting_servomotori)
     t2 = threading.Thread(target=start_ack_handler)
     t3 = threading.Thread(target=fsm_event_loop)
 

@@ -1,14 +1,14 @@
 
 from fsm.states import states
-from fsm.transitions import setup_transitions
+
 
 class FSMEngine:
-    def __init__(self, start_state="S_4_4"):
-        self.states = states
-        self.current_state = self.states[start_state]
+    def __init__(self, start_state, mqtt_client):
+        self.state = start_state               # Usa direttamente l'oggetto State
+        self.mqtt_client = mqtt_client
         self.warning = False
         self.deviato = False
-        setup_transitions()
+       
 
 def handle_event(self, event_obj):
     """
@@ -39,9 +39,14 @@ def handle_event(self, event_obj):
         for action in actions:
             if action.startswith("log:"):
                 print("[LOG]", action[4:])
+            
             elif action.startswith("mqtt:"):
-                topic_msg = action[5:]
-                print(f"[MQTT] Publish su topic: {topic_msg}")
+                try:
+                    topic, payload = action[5:].split("=")
+                    self.mqtt_client.publish(topic.strip(), payload.strip())
+                    print(f"[MQTT] Pubblicato su {topic.strip()} ? {payload.strip()}")
+                except Exception as e:
+                    print(f"[FSM] Errore invio messaggio MQTT: {e}")
             elif action == "wait_ack":
                 print("[ACK] Attesa ack... [simulato: ok]")
             elif action == "set:warning=True":
