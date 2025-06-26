@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"name": "NodeMCU_Client_MQTT",
+			"path": "."
+		},
+		{
+			"path": "../../../../Model_Railway_Project"
+		}
+	],
+	"settings": {}
+}

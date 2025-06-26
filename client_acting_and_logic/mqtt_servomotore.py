@@ -8,7 +8,7 @@ import RPi.GPIO as GPIO
 CLIENT_ID_DEVIATOIO1 = "deviatoio01"
 TOPIC_COMMAND = "deviatoio/01"
 TOPIC_ACK = "ack/deviatoio/01"
-mqtt.username_pw_set("deviatoio01", "esp2025")
+mqtt_client.username_pw_set("deviatoio01", "esp2025")
 
 ANGLE_DEVIAZIONE = 70
 ANGLE_RIPRISTINO = 98
