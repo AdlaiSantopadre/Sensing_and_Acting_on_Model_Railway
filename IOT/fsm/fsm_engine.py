@@ -3,41 +3,54 @@ import time
 import paho.mqtt.client as mqtt
 from fsm.state import State
 
+
 class FSMEngine:
-    def __init__(self, initial_state: State, mqtt_client: mqtt.Client):
-        self.state = initial_state
+    def __init__(self, start_state, mqtt_client):
+        self.state = start_state               # Usa direttamente l'oggetto State
         self.mqtt_client = mqtt_client
         self.warning = False
         self.deviato = False
+       
 
-    def handle_event(self, event: str):
+    def handle_event(self, event_obj):
         """
         Gestisce un evento logico per la FSM.
-        
+        Accetta sia una stringa 'attraversamento_1' sia un dizionario con 'event' e 'timestamp'.
         """
-        if event in self.state.transitions:
-            next_state = self.state.transitions[event]
-            actions = self.state.actions.get(event, [])
-
-            print(f"[FSM] Evento ricevuto: {event} → Transizione {self.state.name} ➜ {next_state.name}")
-            self.execute_actions(actions)
-
-            self.state = next_state
+        if isinstance(event_obj, dict):
+            event = event_obj.get("event")
+            ts = event_obj.get("timestamp", "N/D")
         else:
-            print(f"[FSM] Nessuna transizione definita per evento '{event}' nello stato {self.state.name}")
-            print(f"Stato attuale: ({self.state.name}, {self.state.code})")
+            event = event_obj
+            ts = "N/D"
+        print(f"[FSM] Evento ricevuto: {event} (timestamp: {ts})")
+        
+        if event in self.current_state.transitions:
+            next_state = self.current_state.transitions[event]
+            actions = self.current_state.actions.get(event, [])
+            print(f"[Transizione] {self.current_state.name} --({event})--> {next_state.name}")
+            self._execute_actions(actions)
+            self.current_state = next_state
+            print(f"[Stato Attuale] {self.current_state.name} ({self.current_state.code})")
+        else:
+            print(f"[FSM] Nessuna transizione definita per evento '{event}' nello stato {self.current_state.name}")
+            print(f"Stato attuale: ({self.current_state.name}, {self.current_state.code})")
             print(f"Warning attivo: {self.warning} | Deviato attivo: {self.deviato}")
-    def execute_actions(self, actions):
+
+    def _execute_actions(self, actions):
         for action in actions:
             if action.startswith("log:"):
-                print(f"[LOG] {action[4:]}")
+                print("[LOG]", action[4:])
+            
             elif action.startswith("mqtt:"):
-                topic, payload = action[5:].split("=")
-                self.mqtt_client.publish(topic.strip(), payload.strip())
-                print(f"[MQTT] Pubblicato su {topic.strip()} → {payload.strip()}")
+                try:
+                    topic, payload = action[5:].split("=")
+                    self.mqtt_client.publish(topic.strip(), payload.strip())
+                    print(f"[MQTT] Pubblicato su {topic.strip()} ? {payload.strip()}")
+                except Exception as e:
+                    print(f"[FSM] Errore invio messaggio MQTT: {e}")
             elif action == "wait_ack":
-                print("[FSM] Attesa ACK (simulata)...")
-                time.sleep(0.5)  # sostituire con attesa reale in produzione
+                print("[ACK] Attesa ack... [simulato: ok]")
             elif action == "set:warning=True":
                 self.warning = True
                 print("[FLAG] Warning attivato")
@@ -51,18 +64,16 @@ class FSMEngine:
                 self.deviato = False
                 print("[FLAG] Percorso deviato disattivato")
             elif action == "halt":
-                print("[FSM] HALT: Condizione critica! Interruzione...")
-                raise SystemExit("Sistema arrestato per sicurezza.")
-            elif action.startswith("set:"):
-                var, val = action[4:].split("=")
-                setattr(self, var.strip(), eval(val.strip()))
-                print(f"[FSM] Stato interno aggiornato: {var.strip()} = {getattr(self, var.strip())}")
+                print("[HALT] Sistema in stato di arresto! Alimentazione interrotta.")
+            else:
+                print(f"[AZIONE NON RICONOSCIUTA] {action}")
 
     def get_state(self):
-        return self.state.name, self.state.code
+        return self.current_state.name, self.current_state.code
 
     def is_warning_active(self):
         return self.warning
 
-    def is_deviation_active(self):
+    def is_deviato_active(self):
         return self.deviato
+

@@ -1,22 +1,4 @@
-# Rieseguo dopo il reset
-from dataclasses import dataclass
-
-@dataclass
-class State:
-    name: str
-    code: str
-    transitions: dict = None
-    actions: dict = None
-
-    def __post_init__(self):
-        self.transitions = self.transitions or {}
-        self.actions = self.actions or {}
-
-    def add_transition(self, event: str, next_state: 'State', actions=None):
-        if event in self.transitions:
-            raise ValueError(f"Transizione duplicata per evento '{event}' nello stato '{self.name}'")
-        self.transitions[event] = next_state
-        self.actions[event] = actions if actions else []
+from fsm.state import State
 
 # Definizione degli stati
 states = {

@@ -1,3 +1,4 @@
+import config
 import time
 import paho.mqtt.client as mqtt
 from adafruit_servokit import ServoKit
@@ -8,7 +9,9 @@ import RPi.GPIO as GPIO
 CLIENT_ID_DEVIATOIO1 = "deviatoio01"
 TOPIC_COMMAND = "deviatoio/01"
 TOPIC_ACK = "ack/deviatoio/01"
-mqtt_client.username_pw_set("deviatoio01", "esp2025")
+USERNAME = "deviatoio01"
+PASSWORD = "esp2025"
+
 
 ANGLE_DEVIAZIONE = 70
 ANGLE_RIPRISTINO = 98
@@ -30,7 +33,7 @@ except Exception as e:
     print(f"[{CLIENT_ID_DEVIATOIO1}] ERRORE inizializzazione servomotore: {e}")
     kit = None
 
-# === Funzione per attivare relÃ¨ di emergenza ===
+# === Funzione per attivare relè di emergenza ===
 def attiva_emergenza():
     GPIO.output(RELE_GPIO_PIN, GPIO.HIGH)
     print(f"[{CLIENT_ID_DEVIATOIO1}] EMERGENZA: attivato rele` su GPIO{RELE_GPIO_PIN}")
@@ -70,13 +73,23 @@ def on_message(client, userdata, msg):
         attiva_emergenza()
 
 # === Avvio client MQTT ===
-def start_acting_servomotori(broker_address="192.168.1.153", broker_port=1883):
-    client = mqtt.Client(CLIENT_ID_DEVIATOIO1)
+def start_acting_servomotori():
+    if getattr(start_acting_servomotori, "already_started", False):
+        print(f"[{CLIENT_ID_DEVIATOIO1}] start_acting_servomotori gia` invocato. Ignorato.")
+        return
+
+    start_acting_servomotori.already_started = True
+    if getattr(start_acting_servomotori, "already_started", False):
+        print(f"[{CLIENT_ID_DEVIATOIO1}] start_acting_servomotori gia` invocato. Ignorato.")
+        return
+    client = mqtt.Client(client_id=CLIENT_ID_DEVIATOIO1,callback_api_version=mqtt.CallbackAPIVersion.VERSION1)
+    client.username_pw_set(USERNAME, PASSWORD)
     client.on_connect = on_connect
     client.on_message = on_message
     try:
-        client.connect(broker_address, broker_port, keepalive=60)
+        client.connect(config.BROKER,config.PORT, keepalive=60)
         client.loop_start()
         print(f"[{CLIENT_ID_DEVIATOIO1}] Client MQTT acting avviato.")
     except Exception as e:
         print(f"[{CLIENT_ID_DEVIATOIO1}] ERRORE connessione al broker: {e}")
+

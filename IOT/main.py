@@ -12,7 +12,7 @@ from fsm.states import states
 from fsm.transitions import setup_transitions
 
 # Inizializza FSM e client MQTT 
-fsm_mqtt_client = mqtt.Client(client_id=config.CLIENT_ID)
+fsm_mqtt_client = mqtt.Client(client_id="supervisore_fsm",callback_api_version=mqtt.CallbackAPIVersion.VERSION1)
 fsm_mqtt_client.username_pw_set(username="supervisore_fsm", password="esp2025")
 fsm_mqtt_client.connect(config.BROKER, config.PORT)
 fsm_mqtt_client.loop_start()
