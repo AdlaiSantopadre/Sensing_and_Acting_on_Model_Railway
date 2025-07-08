@@ -52,8 +52,4 @@ states = {
     "D_2_4": State("D_2_4", "11111000"),#
 }
 
-# Visualizzazione
-#import pandas as pd
-#df_states = pd.DataFrame([(s.name, s.code) for s in states.values()], columns=["Stato", "Codice Binario"])
-#df_states.to_csv("stati_definiti.csv", index=False)
-#print("Tabella esportata in 'stati_definiti.csv'")
+
